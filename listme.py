@@ -9,14 +9,16 @@ import json
 import os
 from datetime import datetime
 import time
+import sqlite3 as lite
+
 try:
     from urlparse import urlparse
 except ImportError:
     from urllib.parse import urlparse
 
-def send_message( title, message, image ):
+def insert_data( artist, title, album, playdate, image ):
   #  notice = (title, message, image)
-  #  print title + " - " + message
+    print artist + " - " + title + " - " + album + " - " + playdate
     return
 
 def get_data( user ):
@@ -185,9 +187,9 @@ while 1:
             oldImgPath = mylist['image']
         else:
             imgpath = 'dialog-question'
-    #send_message( artist, track, imgpath );
-    send_message( mylist['artist'], mylist['track'] + "\n" + mylist['album'] + "\nPlayed on: " + mylist['pdate'], imgpath );
+    #insert_data( artist, track, imgpath );
+    insert_data( mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], imgpath );
     #os.remove('cover.png')
-    #send_message("Last.fm Now Playing","Some artist - A song");
+    #insert_data("Last.fm Now Playing","Some artist - A song");
     #print data['recenttracks']['track']
     time.sleep(10)
