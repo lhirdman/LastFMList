@@ -18,9 +18,9 @@ except ImportError:
 
 con = None
 
-def insert_data( artist, title, album, playdate, image ):
+def insert_data( songid, artist, title, album, playdate, image ):
   #  notice = (title, message, image)
-    print artist + " - " + title + " - " + album + " - " + playdate
+    print songid + " - " + artist + " - " + title + " - " + album + " - " + playdate
     return
 
 def init_db():
@@ -159,7 +159,7 @@ while 1:
             time.sleep(10)
         continue
 
-    print "New track id: " + mylist['songid']
+    # print "New track id: " + mylist['songid']
     oldTrackId = mylist['songid']
     oldTrackName = mylist['track']
     oldPDate = mylist['pdate']
@@ -171,5 +171,5 @@ while 1:
             oldImgPath = mylist['image']
         else:
             imgpath = 'dialog-question'
-    insert_data( mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], imgpath );
+    insert_data( mylist['songid'], mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], imgpath );
     time.sleep(10)
