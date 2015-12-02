@@ -16,10 +16,25 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 
+con = None
+
 def insert_data( artist, title, album, playdate, image ):
   #  notice = (title, message, image)
     print artist + " - " + title + " - " + album + " - " + playdate
     return
+
+def init_db():
+    try:
+        con = lite.connect('mylist.db')
+        cur = con.cursor()
+        cur.execute('DROP TABLE IF EXISTS playlist')
+        cur.execute('CREATE TABLE playlist(artist TEXT, title TEXT, album TEXT, playdate TEXT, image BLOB)')
+        con.commit()
+    except lite.Error, e:
+        if con:
+            con.rollback()
+        print "Error %s: " % e.args[0]
+        sys.exit(1)
 
 def get_data( user ):
     headers = {
@@ -49,16 +64,11 @@ def get_data( user ):
     else:
       print response.status
       data = { 'mystatus': response.status }
-#    print uri + path
-#    print json.dumps(content, sort_keys=True, indent=4, separators=(',', ': '))
-#    print data['recenttracks']
     return data
 
 def strip_it( data ):
     if ( data.has_key('recenttracks') ):
         mydata = data['recenttracks']
-#        if ( mydata.has_key('track') ):
-#            print "Track info found"
     else:
         print "Track info not found"
         return ( {'error': '1'} )
@@ -75,22 +85,11 @@ def strip_it( data ):
     artist = data['artist']['#text']
     album = data['album']['#text']
     image = data['image'][1]['#text']
-#    playtime = datetime.strftime('',datetime.utcnow() - datetime.strptime(data['recenttracks']['track']['date']['#text'], '%d %b %Y, %H:%M')
-#    print "The data:"
-#    print data
     if ( data.has_key('date') ):
         playtime = data['date']['#text']
     else:
         playtime = time.asctime( time.localtime(time.time()) )
-#    print "Playtime: " + playtime
     songid = data['mbid']
-#    track = data['recenttracks']['track']['name']
-#    artist = data['recenttracks']['track']['artist']['#text']
-#    image = data['recenttracks']['track']['image'][1]['#text']
-#    playtime = datetime.strftime('',datetime.utcnow() - datetime.strptime(data['recenttracks']['track']['date']['#text'], '%d %b %Y, %H:%M')
-#    playtime = data['recenttracks']['track']['date']['#text']
-#    songid = data['recenttracks']['track']['mbid']
-#    print playtime
     mylist = {
         'track': track,
         'artist':  artist,
@@ -109,11 +108,9 @@ def get_image( uri ):
    response, content = h.request(
         target.geturl(),
         method)
-   #lmfile = open("cover.png", "wb")
    lmfile = open("/tmp/cover.png", "wb")
    lmfile.write(content);
    lmfile.close()
-   #imgpath = "file://" + os.path.abspath(os.path.curdir) + "/cover.png"
    imgpath = "file:///tmp/cover.png"
    return imgpath
 
@@ -133,19 +130,12 @@ while 1:
         continue
     elif ( data.has_key('error') ):
         continue
-
-#    if ( len(data['recenttracks']['track']) == 2 ):
-#        print "To much data overload: %d" % (len(data['recenttracks']['track']))
-#        time.sleep(5)
-#        continue
     mylist = strip_it( data );
     if ( mylist.has_key('error') ):
         print "Error occured: " + mylist['error']
         continue
-    #print "Last knowned track id: " + oldTrackId
     if ( mylist['songid'] == '' ):
         if ( mylist['track'] == oldTrackName ):
-#            print "No update available"
             cnt = cnt + 1
             if ( cnt >= 60 ):
                 time.sleep(300)
@@ -154,7 +144,6 @@ while 1:
                 time.sleep(10)
             continue
     elif ( mylist['songid'] == oldTrackId ):
-#        print "No update available"
         if ( cnt >= 60 ):
             time.sleep(300)
             cnt = 0
@@ -174,11 +163,6 @@ while 1:
     oldTrackId = mylist['songid']
     oldTrackName = mylist['track']
     oldPDate = mylist['pdate']
-    #print mylist
-    #track = mylist['track']
-    #artist = mylist['artist'] 
-    #image = mylist['image']
-    #get_image( image );
     if ( mylist['image'] == oldImgPath ):
         print "No new image needed"
     else:
@@ -187,9 +171,5 @@ while 1:
             oldImgPath = mylist['image']
         else:
             imgpath = 'dialog-question'
-    #insert_data( artist, track, imgpath );
     insert_data( mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], imgpath );
-    #os.remove('cover.png')
-    #insert_data("Last.fm Now Playing","Some artist - A song");
-    #print data['recenttracks']['track']
     time.sleep(10)
