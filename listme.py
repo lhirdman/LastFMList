@@ -21,14 +21,30 @@ con = None
 def insert_data( songid, artist, title, album, playdate, image ):
   #  notice = (title, message, image)
     print songid + " - " + artist + " - " + title + " - " + album + " - " + playdate
-    return
+    try:
+        con = lite.connect('mylist.db')
+        binary = lite.Binary(image)
+        cur = con.cursor()
+        cur.execute("INSERT INTO playlist(songid, artist, title, album, playdate, image) VALUES(?,?,?,?,?,?)",(songid,artist,title,album,playdate,binary,))
+        con.commit()
+    except lite.Error, e:
+        if con:
+            con.rollback()
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
+
+def read_image(imgpath):
+    fin = open( imgpath, "rb")
+    img = fin.read()
+    return img
+    fin.close()
 
 def init_db():
     try:
         con = lite.connect('mylist.db')
         cur = con.cursor()
         cur.execute('DROP TABLE IF EXISTS playlist')
-        cur.execute('CREATE TABLE playlist(artist TEXT, title TEXT, album TEXT, playdate TEXT, image BLOB)')
+        cur.execute('CREATE TABLE playlist(songid TEXT, artist TEXT, title TEXT, album TEXT, playdate TEXT, image BLOB)')
         con.commit()
     except lite.Error, e:
         if con:
@@ -111,7 +127,7 @@ def get_image( uri ):
    lmfile = open("/tmp/cover.png", "wb")
    lmfile.write(content);
    lmfile.close()
-   imgpath = "file:///tmp/cover.png"
+   imgpath = "/tmp/cover.png"
    return imgpath
 
 if len(sys.argv) == 1:
@@ -170,6 +186,8 @@ while 1:
             imgpath = get_image( mylist['image'] );
             oldImgPath = mylist['image']
         else:
-            imgpath = 'dialog-question'
-    insert_data( mylist['songid'], mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], imgpath );
+            imgpath = './music170.png'
+    init_db()
+    img = read_image(imgpath)
+    insert_data( mylist['songid'], mylist['artist'], mylist['track'], mylist['album'], mylist['pdate'], img )
     time.sleep(10)
